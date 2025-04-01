@@ -30,6 +30,10 @@ public class Scene {
 	private int colourBuffer;
 
 	private Shader shader;
+	private Matrix4f modelMatrix = new Matrix4f();
+	private Matrix4f transMatrix = new Matrix4f();
+	private Matrix4f rotMatrix = new Matrix4f();
+	private Matrix4f scaleMatrix = new Matrix4f();
 
 	public Scene() {
 
@@ -77,6 +81,32 @@ public class Scene {
 			// @formatter:on
 
 		indexBuffer = GLBuffers.createIndexBuffer(indices);
+		
+		//a is default
+		
+		//translationMatrix(0f, 0f, transMatrix);
+		//rotationMatrix(0f, rotMatrix);
+		//scaleMatrix(1f, 1f, scaleMatrix);
+		
+		//b is rotate 90 degree
+		
+		//translationMatrix(0f, 0f, transMatrix);
+		//rotationMatrix((float) - Math.PI/2, rotMatrix);
+		//scaleMatrix(1f, 1f, scaleMatrix);
+		
+		//c is translate and scale to bottom right quarter
+		
+		//translationMatrix(0.5f,- 0.5f, transMatrix);
+		//rotationMatrix(0f, rotMatrix);
+		//scaleMatrix(0.5f, 0.5f, scaleMatrix);
+		
+		//d is rotate 135 degree and top left
+		
+		translationMatrix(0.5f, 0f, transMatrix);
+		rotationMatrix(0f, rotMatrix);
+		scaleMatrix(0.2f, 0.2f, scaleMatrix);
+		
+		modelMatrix.mul(transMatrix).mul(rotMatrix).mul(scaleMatrix);
 
 	}
 
@@ -86,6 +116,7 @@ public class Scene {
 		// set the attributes
 		shader.setAttribute("a_position", vertexBuffer);
 		shader.setAttribute("a_colour", colourBuffer);
+		shader.setUniform("u_modelMatrix", modelMatrix);
 
 		// draw using index buffer
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
@@ -93,6 +124,12 @@ public class Scene {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		glDrawElements(GL_TRIANGLES, indices.length, GL_UNSIGNED_INT, 0);
 
+	}
+	
+	public void update(float deltaTime) {
+		translationMatrix(0f, 4f*deltaTime, transMatrix);
+		rotationMatrix((float)Math.PI/2 * deltaTime, rotMatrix);
+		modelMatrix.mul(transMatrix).mul(rotMatrix);
 	}
 
 	/**
@@ -134,8 +171,18 @@ public class Scene {
 
 	public static Matrix4f rotationMatrix(float angle, Matrix4f dest) {
 
-		// TODO: Your code here
-
+		dest.identity();
+		
+		//		[ cos -sin 0 0 ]
+		// T =  [ sin cos  0 0 ]
+		//		[ 0   0    0 0 ]
+		//		[ 0   0    0 1 ]
+		
+		dest.m00((float) Math.cos(angle));
+		dest.m01((float) Math.sin(angle));
+		dest.m10((float) Math.sin(-angle));
+		dest.m11((float) Math.cos(angle));
+		
 		return dest;
 	}
 
@@ -151,7 +198,10 @@ public class Scene {
 
 	public static Matrix4f scaleMatrix(float sx, float sy, Matrix4f dest) {
 
-		// TODO: Your code here
+		dest.identity();
+		
+		dest.m00(sx);
+		dest.m11(sy);
 
 		return dest;
 	}
